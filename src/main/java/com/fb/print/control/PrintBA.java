@@ -12,11 +12,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
-import com.fb.StringUtils;
+import com.fb.exception.entity.CibClientTechnicalException;
+import com.fb.exception.entity.ErrorCode;
 import com.fb.print.entity.Address;
 import com.fb.print.entity.Data;
 import com.fb.print.entity.Image;
@@ -36,13 +38,13 @@ public class PrintBA {
     PrintESI printESI;
 
     @ConfigProperty(name = "http.proxyHost")
-    String proxyHost;
+    Optional<String> proxyHost;
 
     @ConfigProperty(name = "http.proxyPort")
-    String proxyPort;
+    Optional<String> proxyPort;
 
-    @ConfigProperty(name = "cib.print.ducument.guid")
-    String documentGuid;
+    @ConfigProperty(name = "cib.print.document.guid")
+    Optional<String> documentGuid;
 
     /**
      * Print document
@@ -50,6 +52,11 @@ public class PrintBA {
      * @return PDF stream
      */
     public Response printDocument() {
+
+        if (documentGuid.isEmpty()) {
+            throw new CibClientTechnicalException(ErrorCode.B_INVALID_PARAMETER,
+                    "Document Guid not configured in " + "application.properties");
+        }
 
         Person homer = new Person();
         homer.setName("Homer Simpson");
@@ -95,27 +102,30 @@ public class PrintBA {
         multipartFormDataOutput.addFormData("merge", mergeOptions, MediaType.APPLICATION_JSON_TYPE, "merge.json");
 
         Proxy proxy = Proxy.NO_PROXY;
-        if(!StringUtils.isBlank(proxyHost) && !StringUtils.isBlank(proxyPort)) {
-            proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, Integer.parseInt(proxyPort)));
+        if (proxyHost.isPresent() && proxyPort.isPresent()) {
+            proxy = new Proxy(Proxy.Type.HTTP,
+                    new InetSocketAddress(proxyHost.get(), Integer.parseInt(proxyPort.get())));
         }
 
         try {
-            URL faceFrontUrl = new URL("https://www.kindpng.com/picc/m/144-1448183_homer-simpson-face-render-png-by-8scorpion-d6mtcmo.png");
-            URL faceProfileUrl = new URL("https://www.kindpng.com/picc/m/144-1448383_best-free-simpsons-png-image-without-background-homer.png");
-            URL houseUrl = new URL("https://www.kindpng.com/picc/m/327-3272173_simpsons-tapped-out-hd-png-download.png");
+            URL faceFrontUrl =
+                    new URL("https://www.kindpng.com/picc/m/144-1448183_homer-simpson-face-render-png-by-8scorpion-d6mtcmo.png");
+            URL faceProfileUrl =
+                    new URL("https://www.kindpng.com/picc/m/144-1448383_best-free-simpsons-png-image-without-background-homer.png");
+            URL houseUrl =
+                    new URL("https://www.kindpng.com/picc/m/327-3272173_simpsons-tapped-out-hd-png-download.png");
 
             multipartFormDataOutput.addFormData("resources", faceFrontUrl.openConnection(proxy).getInputStream(),
-                    MEDIATYPE_IMAGE_PNG,
-                    faceFront.getIdentifier());
-            multipartFormDataOutput.addFormData("resources", faceProfileUrl.openConnection(proxy).getInputStream(), MEDIATYPE_IMAGE_PNG,
-                    faceProfile.getIdentifier());
-            multipartFormDataOutput.addFormData("resources", houseUrl.openConnection(proxy).getInputStream(), MEDIATYPE_IMAGE_PNG,
-                    house.getIdentifier());
-        }catch (IOException e) {
+                    MEDIATYPE_IMAGE_PNG, faceFront.getIdentifier());
+            multipartFormDataOutput.addFormData("resources", faceProfileUrl.openConnection(proxy).getInputStream(),
+                    MEDIATYPE_IMAGE_PNG, faceProfile.getIdentifier());
+            multipartFormDataOutput.addFormData("resources", houseUrl.openConnection(proxy).getInputStream(),
+                    MEDIATYPE_IMAGE_PNG, house.getIdentifier());
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return printESI.printDocument(documentGuid, multipartFormDataOutput, "0001", "TO");
+        return printESI.printDocument(documentGuid.get(), multipartFormDataOutput, "0001", "TO");
     }
 
 }

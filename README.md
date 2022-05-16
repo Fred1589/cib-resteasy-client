@@ -7,23 +7,23 @@ If you want to learn more about Quarkus, please visit its website: https://quark
 ## Prerequisites
 
 ### Maven 3.8.3 (at least)
-https://downloads.apache.org/maven/maven-3/3.8.3/
+https://dlcdn.apache.org/maven/maven-3/3.8.5/binaries/apache-maven-3.8.5-bin.zip
 
-To verify your installation, run:
+To verify your installation (include bin folder to path variable in windows), run:
 ```shell script
 $ mvn --version
 ```
 
-### JDK11
-https://www.azul.com/downloads/zulu-community/?version=java-11-lts&package=jdk
+### JDK17
+https://cdn.azul.com/zulu/bin/zulu17.34.19-ca-jdk17.0.3-win_x64.zip
 
-To verify your installation, run:
+To verify your installation (include bin folder to path variable in windows), run:
 ```shell script
-$ javac -version
+$ java -version
 ```
 You should see somethink like:
 ```shell script
-$ javac 11.0.10
+$ java 17.0.3
 ```  
 
 ### PRINT (CIB)
@@ -40,11 +40,12 @@ also in the application.properties
 ### Configuration:
 To configure specific things, like file logging or corporate proxy Quarkus offers the application.properties which
 can be found under src/main/resources. There is also the URL for the print instance to reach configured. You can
-find it with the key quarkus.rest-client.print-api.url
+find it with the key quarkus.rest-client.print-api.url. Another mandatory parameter to configure is the document guid the test template has in the print instance.
 
 ### Start Quarkus:
 Run: 
 ```shell script
+$ mvn clean install
 $ mvn quarkus:dev
 ```
 **Windows:** http://localhost:8080  
@@ -52,8 +53,9 @@ $ mvn quarkus:dev
 
 ### Service:
 The application provides a print service which can be reached with curl:
-curl -v -X POST http://localhost:8080/print --output generated.pdf
-
+```shell script
+curl -v -X GET http://localhost:8080/print --output generated.pdf
+```
 
 ## Troubleshoot
 **Error when executing tests:**  
