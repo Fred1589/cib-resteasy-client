@@ -32,7 +32,8 @@ application
 
 
 ## Running the application in dev mode
-###Example RTF
+
+### Example RTF
 The print service needs an example rtf file uploaded. There can be found one in the rtf directory for this
 application. This one has to be uploaded on the print service instance and the template GUID has to be configured
 also in the application.properties
